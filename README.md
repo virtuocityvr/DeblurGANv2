@@ -47,6 +47,22 @@ the input to the output, so that the learning focuses on the residue. The input 
 property, we are entitled with the flexibility to navigate through the spectrum of accuracy and efficiency. 
 By default, we choose ImageNet-pretrained backbones to convey more semantic-related features.--> 
 
+
+### Usage
+- `test.sh` runs unit tests
+#### Tests
+- Tests
+    - `python -m unittest test_dataset.AugTest`
+    - `python -m unittest test_aug.AugTest`
+    - `python  test_metrics.py --img_folder /media/filipe/data_s/FG/WORK/Pupil/data/GOPRO/GOPRO_3840FPS_AVG_3-21/ --weights_path checkpoints/fpn_inception.h5`
+- Train
+    - `python train.py` (uses config/config.yaml)
+- Inference
+    - `python3 predict.py data/R0011054_left_undist.png  --weights_path "checkpoints/fpn_inception.h5" --out_dir "data/output"`
+
+### TODOs
+**- copy to a private repo**
+
 ## Datasets
 
 The datasets for training can be downloaded via the links below:
