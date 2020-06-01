@@ -60,6 +60,21 @@ By default, we choose ImageNet-pretrained backbones to convey more semantic-rela
 - Inference
     - `python3 predict.py data/R0011054_left_undist.png  --weights_path "checkpoints/fpn_inception.h5" --out_dir "data/output"`
 
+#### Push image to GCP
+
+1. Install docker 19.03
+1. Make you changes in [Dockerfile](./Dockerfile)
+1. Build docker image `docker build -t deblur-gan-v2 .`
+1. Login: ` gcloud auth activate-service-account filipe@semantic-segmentation-218212.iam.gserviceaccount.com --key-file=/home/filipe/semantic-segmentation-218212-cb1bb43d4fef.json`
+1. Deploy the container and using in GCP's AI platform you have change the container's tag and push it to GCP's Container Registry:
+    - `docker tag deblur-gan-v2 gcr.io/semantic-segmentation-218212/deblur-gan-v2`
+    - `docker push gcr.io/semantic-segmentation-218212/deblur-gan-v2`
+
+## Test local Docker image
+- Run `docker run -it mink-eng /bin/bash` or `docker run -it mink-eng` if you have defined an ENTRY_POINT
+- To use your GPU(s) add `--gpus all` as an argument whilst running docker:`docker run --gpus all -it mink-eng`
+
+
 ### TODOs
 **- copy to a private repo**
 

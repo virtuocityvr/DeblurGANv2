@@ -1,0 +1,50 @@
+project:
+  name: deblur-gan-v2
+  syncFilters:
+    - exclude:
+        - .git/*
+        - .idea/*
+        - data/*
+        - doc_images/*
+        - env/*
+        - fpn/*
+
+container:
+  projectDir: /workspace/project
+  image: gcr.io/semantic-segmentation-218212/deblur-gan-v2@sha256:3d87d0211470a6e0113ef06d5626ec7563c3152fa1923f93e518e208e1d5c0b6
+  volumeMounts:
+    - name: workspace
+      mountPath: /workspace
+    - name: data
+      mountPath: /joblib
+  runtimeParameters: ["--shm-size", "4G"]
+
+instances:
+  - name: tesla-t4
+    provider: gcp
+    parameters:
+      zone: us-west1-a
+      machineType: n1-standard-16
+      dockerDataRoot: /docker
+      imageName: spotty-with-docker-auth
+      gpu:
+        type: nvidia-tesla-t4
+        count: 1
+      volumes:
+        - name: workspace
+          parameters:
+            size: 10
+            deletionPolicy: retain
+        - name: data
+          parameters:
+            size: 10
+            deletionPolicy: retain
+        - name: docker
+          parameters:
+            size: 20
+            mountDir: /docker
+            deletionPolicy: retain
+
+scripts:
+  train: |
+    python train.py

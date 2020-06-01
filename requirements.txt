@@ -13,3 +13,8 @@ tensorboard
 torchsummary
 pyssim
 fire
+google-cloud-storage
+boto
+boto3
+xmltodict
+spotty
