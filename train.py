@@ -1,6 +1,7 @@
 import logging
 from functools import partial
 
+import os
 import cv2
 import torch
 import torch.optim as optim
@@ -8,6 +9,7 @@ import tqdm
 import yaml
 from joblib import cpu_count
 from torch.utils.data import DataLoader
+from google.cloud import storage
 
 from adversarial_trainer import GANFactory
 from dataset import PairedDataset
@@ -166,14 +168,50 @@ class Trainer:
         self.scheduler_G = self._get_scheduler(self.optimizer_G)
         self.scheduler_D = self._get_scheduler(self.optimizer_D)
 
+def cache_dataset(gs_storage_path, cache_prefix):
+
+    full_path = gs_storage_path.replace("gs://", "")
+    print(full_path)
+    splits = full_path.split("/")
+    project_name = splits[0]
+    bucket_name = splits[1]
+    prefix = "/".join(splits[2:])
+
+    print("Project name: {}".format(project_name))
+    print("Bucket: {}".format(bucket_name))
+    print("Prefix: {}".format(prefix))
+    # storage_client = storage.Client()
+    storage_client = storage.Client()
+
+    bucket = storage_client.get_bucket(bucket_name)
+    blobs = bucket.list_blobs(prefix = prefix)
+    cache_dir = os.path.join(cache_prefix, prefix)
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+    for blob in blobs:
+        blob_local_dir = os.path.join(cache_dir, os.path.dirname(blob.name))
+        if not os.path.exists(blob_local_dir):
+            os.makedirs(blob_local_dir)
+
+        filename = os.path.join(blob_local_dir, blob.name.split("/")[-1])
+        print("Downloading {} to {}".format(blob, filename))
+        blob.download_to_filename(filename)
 
 if __name__ == '__main__':
     with open('config/config.yaml', 'r') as f:
         config = yaml.load(f)
 
-    batch_size = config.pop('batch_size')
-    get_dataloader = partial(DataLoader, batch_size=batch_size, num_workers=cpu_count(), shuffle=True, drop_last=True)
+    print("Training DeBlurGAN-v2....")
 
+    batch_size = config.pop('batch_size')
+
+    if config.pop('download_data'):
+        print("Downloading dataset...")
+        data_source_path = config.pop('data_source')
+        data_destination_path = config.pop('data_destination')
+        cache_dataset(data_source_path, data_destination_path)
+
+    get_dataloader = partial(DataLoader, batch_size=batch_size, num_workers=cpu_count(), shuffle=True, drop_last=True)
     datasets = map(config.pop, ('train', 'val'))
     datasets = map(PairedDataset.from_config, datasets)
     train, val = map(get_dataloader, datasets)
